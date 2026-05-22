@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>株式会社RIG-EL 営業システム</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0c0b09;--bg2:#141210;--bg3:#1a1714;--bg4:#211e1a;
+  --surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#f5f0eb;--text2:rgba(245,240,235,0.52);--text3:rgba(245,240,235,0.28);
+  --accent:#FF6B1A;--accent-dim:rgba(255,107,26,0.12);--accent-glow:rgba(255,107,26,0.3);
+  --gold:#FFAB40;--coral:#FF4D6D;--sky:#38BDF8;--mint:#34D399;--violet:#A78BFA;
+  --r:10px;--r2:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);}
+body::before,body::after{content:'';position:fixed;border-radius:50%;filter:blur(140px);pointer-events:none;z-index:0;}
+body::before{width:600px;height:500px;background:radial-gradient(ellipse,rgba(255,107,26,0.07) 0%,transparent 70%);top:-150px;right:-80px;}
+body::after{width:500px;height:500px;background:radial-gradient(ellipse,rgba(255,171,64,0.05) 0%,transparent 70%);bottom:-80px;left:-60px;}
+
+/* ═══ LOGIN SCREEN ═══ */
+#login-screen{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+}
+.login-logo{text-align:center;margin-bottom:40px;}
+.login-emblem{
+  width:56px;height:56px;border-radius:16px;
+  background:linear-gradient(135deg,#FF6B1A,#FFAB40);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#fff;
+  margin:0 auto 12px;
+}
+.login-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;letter-spacing:0.5px;}
+.login-brand span{color:var(--accent);}
+.login-tagline{font-size:12px;color:var(--text3);margin-top:4px;}
+
+.login-card{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:20px;
+  padding:28px 24px;width:100%;max-width:360px;
+}
+.login-card-title{font-size:15px;font-weight:500;margin-bottom:20px;text-align:center;}
+
+/* USER SELECT */
+.user-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
+.user-tile{
+  background:var(--bg4);border:1px solid var(--border);border-radius:12px;
+  padding:14px 10px;cursor:pointer;text-align:center;transition:all 0.18s;
+}
+.user-tile:hover,.user-tile:active{border-color:rgba(255,107,26,0.4);background:var(--accent-dim);}
+.user-tile.selected{border-color:var(--accent);background:var(--accent-dim);}
+.user-av{
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;color:#fff;margin:0 auto 8px;
+}
+.user-tile-name{font-size:13px;font-weight:500;}
+.user-tile-id{font-size:10.5px;color:var(--text3);margin-top:2px;}
+
+/* PIN PAD */
+.pin-section{display:none;}
+.pin-label{font-size:12px;color:var(--text2);margin-bottom:10px;text-align:center;}
+.pin-dots{display:flex;justify-content:center;gap:10px;margin-bottom:20px;}
+.pin-dot{
+  width:14px;height:14px;border-radius:50%;
+  border:1.5px solid var(--border2);background:transparent;transition:all 0.15s;
+}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+.pin-dot.error{background:var(--coral);border-color:var(--coral);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.pin-key{
+  background:var(--bg4);border:1px solid var(--border);border-radius:12px;
+  padding:16px;font-size:20px;font-family:'Syne',sans-serif;font-weight:700;
+  cursor:pointer;text-align:center;transition:all 0.12s;user-select:none;
+}
+.pin-key:active{transform:scale(0.94);background:var(--surface2);}
+.pin-key.del{font-size:16px;color:var(--text2);}
+.pin-key.empty{background:transparent;border-color:transparent;cursor:default;}
+
+.pin-back{
+  background:none;border:none;color:var(--text3);font-size:13px;
+  cursor:pointer;margin-top:16px;display:block;width:100%;text-align:center;padding:8px;
+}
+
+/* ADMIN BADGE */
+.admin-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,107,26,0.15);border:1px solid rgba(255,107,26,0.3);border-radius:20px;padding:2px 8px;font-size:10.5px;color:var(--accent);font-weight:500;}
+
+/* ═══ APP SHELL ═══ */
+#app{display:none;min-height:100vh;position:relative;z-index:1;}
+#app.visible{display:flex;}
+
+/* ── SIDEBAR (desktop) ── */
+.sidebar{
+  width:228px;flex-shrink:0;background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;
+}
+.logo{padding:22px 20px 18px;border-bottom:1px solid var(--border);}
+.logo-mark{display:flex;align-items:center;gap:10px;}
+.logo-emblem{width:32px;height:32px;background:linear-gradient(135deg,#FF6B1A,#FFAB40);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#fff;flex-shrink:0;}
+.logo-text{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;letter-spacing:0.5px;}
+.logo-text span{color:var(--accent);}
+.logo-sub{font-size:10.5px;color:var(--text3);margin-top:4px;padding-left:42px;}
+.user-badge{margin:0 12px 0;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;gap:8px;margin-top:12px;}
+.user-badge-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-badge-info{flex:1;min-width:0;}
+.user-badge-name{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-badge-role{font-size:10.5px;color:var(--text3);}
+.btn-logout{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;padding:2px;flex-shrink:0;transition:color 0.14s;}
+.btn-logout:hover{color:var(--coral);}
+.nav{padding:12px 10px;flex:1;display:flex;flex-direction:column;gap:2px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--text2);font-size:13.5px;transition:all 0.18s;border:1px solid transparent;}
+.nav-item:hover{background:var(--surface);color:var(--text);}
+.nav-item.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(255,107,26,0.22);font-weight:500;}
+.nav-item.settings-item{margin-top:auto;}
+.nav-icon{font-size:16px;width:20px;text-align:center;}
+.sidebar-bottom{padding:12px 10px 16px;border-top:1px solid var(--border);}
+.brand-footer{background:linear-gradient(135deg,rgba(255,107,26,0.12),rgba(255,171,64,0.06));border:1px solid rgba(255,107,26,0.18);border-radius:10px;padding:9px 12px;font-size:10.5px;color:var(--text2);}
+.brand-footer strong{color:var(--accent);font-weight:500;}
+
+/* ── MOBILE BOTTOM NAV ── */
+.mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--bg2);border-top:1px solid var(--border);
+  z-index:100;padding:8px 0 max(8px,env(safe-area-inset-bottom));
+}
+.mobile-nav-inner{display:flex;justify-content:space-around;}
+.mnav-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 12px;cursor:pointer;color:var(--text3);
+  font-size:10px;border-radius:10px;transition:all 0.15s;min-width:56px;
+}
+.mnav-item.active{color:var(--accent);}
+.mnav-icon{font-size:20px;line-height:1;}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;min-width:0;}
+.page{display:none;padding:28px 36px;animation:fadeIn 0.28s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.page-header{margin-bottom:24px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.page-title{font-family:'Syne',sans-serif;font-size:25px;font-weight:700;letter-spacing:-0.3px;}
+.page-title span{color:var(--accent);}
+.page-subtitle{font-size:13px;color:var(--text2);margin-top:4px;}
+
+/* ── MONTH NAV ── */
+.month-nav{display:flex;align-items:center;gap:8px;}
+.month-nav button{background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.month-nav button:hover{border-color:var(--border2);color:var(--text);}
+.month-label{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;min-width:80px;text-align:center;}
+
+/* ── METRICS ── */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.metric-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;transition:border-color 0.18s;}
+.metric-card.highlight{border-color:rgba(255,107,26,0.3);background:linear-gradient(135deg,rgba(255,107,26,0.07),transparent);}
+.metric-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.metric-label{font-size:11px;color:var(--text2);}
+.metric-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.metric-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;}
+.metric-delta{font-size:10.5px;color:var(--text3);margin-top:2px;}
+
+/* ── REV CARDS ── */
+.rev-total{background:var(--bg3);border:1px solid rgba(255,107,26,0.25);border-radius:var(--r2);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.rev-total-label{font-size:12.5px;color:var(--text2);}
+.rev-total-value{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--accent);}
+.rev-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.rev-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.rev-card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.rev-card-label{font-size:11px;color:var(--text2);margin-bottom:3px;}
+.rev-card-value{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;}
+.rev-card-sub{font-size:10.5px;color:var(--text3);margin-top:2px;}
+.metric-badge{display:inline-block;font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:5px;}
+.badge-new{background:rgba(52,211,153,0.15);color:var(--mint);}
+.badge-recurring{background:rgba(56,189,248,0.15);color:var(--sky);}
+
+/* ── CHARTS ── */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.chart-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:20px;}
+.chart-card.full{grid-column:1/-1;}
+.chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.chart-title{font-size:13px;font-weight:500;}
+.chart-pill{font-size:10px;padding:2px 8px;border-radius:20px;background:var(--accent-dim);color:var(--accent);font-weight:500;}
+.legend-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);}
+.ldot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.status-flex{display:flex;align-items:center;gap:24px;}
+.status-list{flex:1;display:flex;flex-direction:column;gap:8px;}
+.status-row-item{display:flex;align-items:center;gap:8px;}
+.sbar-wrap{flex:1;height:5px;background:var(--bg4);border-radius:99px;overflow:hidden;}
+.sbar{height:100%;border-radius:99px;transition:width 0.7s cubic-bezier(0.16,1,0.3,1);}
+.scount{font-size:11px;color:var(--text3);min-width:22px;text-align:right;}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.search-wrap{flex:1;min-width:160px;position:relative;}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none;}
+.search-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 10px 8px 32px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.18s;}
+.search-input:focus{border-color:rgba(255,107,26,0.4);}
+.search-input::placeholder{color:var(--text3);}
+.filter-sel{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;}
+.btn-add{background:linear-gradient(135deg,#FF6B1A,#FFAB40);color:#0c0b09;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.18s;white-space:nowrap;box-shadow:0 0 16px rgba(255,107,26,0.2);}
+.btn-add:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,107,26,0.35);}
+
+/* ── LEADS TABLE (desktop) ── */
+.table-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.leads-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+.leads-table th{text-align:left;padding:10px 11px;font-size:9.5px;font-weight:500;color:var(--text3);letter-spacing:0.6px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg4);}
+.leads-table td{padding:11px 11px;border-bottom:1px solid var(--border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:background 0.12s;vertical-align:middle;}
+.leads-table tr:last-child td{border-bottom:none;}
+.leads-table tbody tr:hover td{background:var(--surface);}
+.leads-table th:nth-child(1){width:12%;}
+.leads-table th:nth-child(2){width:8%;}
+.leads-table th:nth-child(3){width:8%;}
+.leads-table th:nth-child(4){width:4%;}
+.leads-table th:nth-child(5){width:12%;}
+.leads-table th:nth-child(6){width:5%;}
+.leads-table th:nth-child(7){width:12%;}
+.leads-table th:nth-child(8){width:9%;}
+.leads-table th:nth-child(9){width:11%;}
+.leads-table th:nth-child(10){width:7%;}
+.leads-table th:nth-child(11){width:9%;}
+.leads-table th:nth-child(12){width:5%;}
+.co-cell{font-weight:500;}
+.url-lnk{color:var(--gold);text-decoration:none;font-size:14px;}
+.amount-cell{font-family:'Syne',sans-serif;font-size:11.5px;font-weight:600;color:var(--mint);}
+.date-cell{font-size:11px;color:var(--text3);}
+.tag{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.tag-定期交流{background:rgba(56,189,248,0.12);color:var(--sky);}
+.tag-提案中{background:rgba(255,107,26,0.14);color:var(--accent);}
+.tag-受注{background:rgba(52,211,153,0.12);color:var(--mint);}
+.tag-見込み{background:rgba(255,171,64,0.13);color:var(--gold);}
+.tag-パートナー候補{background:rgba(167,139,250,0.13);color:var(--violet);}
+.tag-再アプローチ{background:rgba(255,77,109,0.12);color:var(--coral);}
+.member-badge{display:inline-flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 6px 2px 2px;font-size:10.5px;white-space:nowrap;}
+.member-avatar{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;flex-shrink:0;}
+.type-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap;}
+.type-single{background:rgba(52,211,153,0.12);color:var(--mint);}
+.type-recurring{background:rgba(56,189,248,0.12);color:var(--sky);}
+.row-actions{display:flex;gap:3px;}
+.row-btn{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px 5px;border-radius:6px;font-size:13px;transition:all 0.14s;line-height:1;}
+.row-btn:hover{background:var(--surface);color:var(--text);}
+.row-btn.del:hover{color:var(--coral);}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3);}
+
+/* ── MOBILE LEAD CARDS ── */
+.lead-cards{display:none;flex-direction:column;gap:10px;}
+.lead-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;}
+.lead-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.lead-card-company{font-weight:500;font-size:14px;}
+.lead-card-name{font-size:12px;color:var(--text2);margin-top:2px;}
+.lead-card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+.lead-card-row{display:flex;gap:6px;font-size:11.5px;color:var(--text2);margin-bottom:4px;align-items:flex-start;}
+.lead-card-row-label{color:var(--text3);flex-shrink:0;width:42px;}
+.lead-card-actions{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.lead-card-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:8px;font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;text-align:center;transition:all 0.14s;}
+.lead-card-btn:hover,.lead-card-btn:active{background:var(--surface2);}
+.lead-card-btn.del-btn:active{color:var(--coral);}
+
+/* ── MOBILE FAB ── */
+.fab{
+  display:none;
+  position:fixed;right:20px;bottom:calc(70px + env(safe-area-inset-bottom));
+  width:54px;height:54px;border-radius:50%;
+  background:linear-gradient(135deg,#FF6B1A,#FFAB40);
+  border:none;color:#0c0b09;font-size:26px;cursor:pointer;
+  box-shadow:0 4px 20px rgba(255,107,26,0.4);
+  z-index:90;display:none;align-items:center;justify-content:center;
+  transition:transform 0.15s;
+}
+.fab:active{transform:scale(0.93);}
+
+/* ── MONTHLY TABLE ── */
+.monthly-table-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:20px;}
+.monthly-table{width:100%;border-collapse:collapse;font-size:12px;}
+.monthly-table th{text-align:left;padding:10px 13px;font-size:9.5px;font-weight:500;color:var(--text3);letter-spacing:0.6px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg4);}
+.monthly-table td{padding:11px 13px;border-bottom:1px solid var(--border);transition:background 0.12s;}
+.monthly-table tr:last-child td{border-bottom:none;}
+.monthly-table tbody tr:hover td{background:var(--surface);}
+.monthly-table .total-row td{background:var(--bg4);font-weight:600;border-top:1px solid var(--border2);}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:1000;align-items:center;justify-content:center;padding:16px;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg3);border:1px solid var(--border2);border-radius:20px;padding:24px 26px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;animation:modalIn 0.25s cubic-bezier(0.16,1,0.3,1);}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;}
+.modal-close{background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.14s;flex-shrink:0;}
+.modal-close:hover{background:var(--surface2);color:var(--text);}
+.form-section{margin-bottom:16px;}
+.form-section-title{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid .full{grid-column:1/-1;}
+.fg label{display:block;font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:500;}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--bg4);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:10px 12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.18s;-webkit-appearance:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:rgba(255,107,26,0.45);}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--text3);}
+.fg textarea{min-height:72px;resize:vertical;}
+.fg select option{background:#1a1714;}
+
+/* ORDER TYPE TOGGLE */
+.order-type-toggle{display:flex;gap:0;background:var(--bg4);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:12px;}
+.ott-btn{flex:1;padding:10px;font-size:13px;font-family:'DM Sans',sans-serif;border:none;background:none;color:var(--text2);cursor:pointer;transition:all 0.18s;font-weight:400;}
+.ott-btn.active{background:var(--accent-dim);color:var(--accent);font-weight:500;}
+.ott-btn:first-child{border-right:1px solid var(--border);}
+.recurring-box{background:var(--bg4);border:1px solid rgba(56,189,248,0.2);border-radius:10px;padding:14px;}
+.recurring-box-title{font-size:11px;color:var(--sky);font-weight:500;margin-bottom:10px;}
+.month-stepper{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.month-stepper button{width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.14s;flex-shrink:0;}
+.month-stepper button:active{transform:scale(0.93);}
+.month-stepper-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;min-width:36px;text-align:center;}
+.month-stepper-label{font-size:12px;color:var(--text2);}
+.recurring-preview{margin-top:10px;padding:8px 10px;background:rgba(56,189,248,0.06);border-radius:7px;font-size:11.5px;color:var(--sky);line-height:1.5;}
+
+/* MEMBER SELECT */
+.member-select-area{display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--bg4);border:1px solid var(--border);border-radius:9px;min-height:40px;cursor:pointer;transition:border-color 0.18s;}
+.member-chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 8px 3px 3px;font-size:12px;}
+.member-chip-av{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;}
+.member-chip-rm{cursor:pointer;color:var(--text3);font-size:13px;margin-left:2px;line-height:1;padding:0 2px;}
+.member-dropdown{margin-top:6px;background:var(--bg4);border:1px solid var(--border2);border-radius:10px;overflow:hidden;}
+.mdrop-item{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;transition:background 0.12s;font-size:13px;}
+.mdrop-item:hover,.mdrop-item:active{background:var(--surface2);}
+.mdrop-item.selected{background:var(--accent-dim);}
+
+.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px;}
+.btn-cancel{background:var(--surface);border:1px solid var(--border);color:var(--text2);border-radius:9px;padding:10px 16px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;}
+.btn-cancel:hover{background:var(--surface2);color:var(--text);}
+.btn-save{background:linear-gradient(135deg,#FF6B1A,#FFAB40);border:none;color:#0c0b09;border-radius:9px;padding:10px 22px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.18s;}
+.btn-save:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,107,26,0.3);}
+
+/* SETTINGS */
+.settings-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.settings-item{display:flex;align-items:center;justify-content:space-between;background:var(--bg4);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
+.settings-item-info{display:flex;align-items:center;gap:8px;}
+.settings-cred{font-size:10.5px;color:var(--text3);margin-top:2px;}
+.settings-cred span{color:var(--sky);font-family:'Syne',sans-serif;font-weight:700;font-size:12px;}
+.btn-rm{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;transition:all 0.14s;}
+.btn-rm:hover{color:var(--coral);background:rgba(255,77,109,0.1);}
+.add-row{display:flex;gap:8px;}
+.add-row input{flex:1;background:var(--bg4);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:10px 12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.18s;}
+.add-row input:focus{border-color:rgba(255,107,26,0.45);}
+.btn-addm{background:var(--accent-dim);border:1px solid rgba(255,107,26,0.3);color:var(--accent);border-radius:9px;padding:10px 14px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom));right:16px;background:var(--bg3);border:1px solid var(--border2);border-radius:11px;padding:10px 14px;font-size:13px;font-weight:500;color:var(--text);z-index:2000;display:flex;align-items:center;gap:8px;transform:translateY(70px);opacity:0;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#FF6B1A,#FFAB40);flex-shrink:0;}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
+
+/* ── RESPONSIVE ── */
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(max-width:768px){
+  .proposal-grid{grid-template-columns:1fr !important;}
+  #proposal-output{min-height:280px !important;}
+}
+  .mobile-nav{display:block;}
+  .fab{display:flex;}
+  .page{padding:16px 16px 80px;}
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+  .charts-grid{grid-template-columns:1fr;}
+  .chart-card.full{grid-column:1;}
+  .rev-breakdown{grid-template-columns:1fr 1fr;}
+  .table-wrap{display:none;}
+  .lead-cards{display:flex;}
+  .page-title{font-size:20px;}
+  .monthly-table{font-size:11.5px;}
+  .monthly-table th,.monthly-table td{padding:8px 10px;}
+  .status-flex{flex-direction:column;align-items:stretch;}
+  .status-flex>div:first-child{align-self:center;}
+}
+@media(max-width:400px){
+  .metrics-grid{grid-template-columns:1fr 1fr;}
+  .metric-value{font-size:19px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="login-screen">
+  <div class="login-logo">
+    <div class="login-emblem">R</div>
+    <div class="login-brand">RIG-<span>EL</span></div>
+    <div class="login-tagline">株式会社RIG-EL 営業システム</div>
+  </div>
+  <div class="login-card">
+    <div class="login-card-title" id="login-card-title">メンバーを選択</div>
+
+    <!-- Step 1: ユーザー選択 -->
+    <div id="step-select">
+      <div class="user-grid" id="user-grid"></div>
+    </div>
+
+    <!-- Step 2: PIN入力 -->
+    <div id="step-pin" class="pin-section">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div id="pin-user-av" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;margin:0 auto 8px;"></div>
+        <div id="pin-user-name" style="font-size:15px;font-weight:500;"></div>
+        <div id="pin-user-id" style="font-size:11px;color:var(--text3);margin-top:2px;"></div>
+      </div>
+      <div class="pin-label">4桁のPINを入力</div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+        <div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-pad" id="pin-pad">
+        <div class="pin-key" onclick="pinKey('1')">1</div>
+        <div class="pin-key" onclick="pinKey('2')">2</div>
+        <div class="pin-key" onclick="pinKey('3')">3</div>
+        <div class="pin-key" onclick="pinKey('4')">4</div>
+        <div class="pin-key" onclick="pinKey('5')">5</div>
+        <div class="pin-key" onclick="pinKey('6')">6</div>
+        <div class="pin-key" onclick="pinKey('7')">7</div>
+        <div class="pin-key" onclick="pinKey('8')">8</div>
+        <div class="pin-key" onclick="pinKey('9')">9</div>
+        <div class="pin-key empty"></div>
+        <div class="pin-key" onclick="pinKey('0')">0</div>
+        <div class="pin-key del" onclick="pinDel()">⌫</div>
+      </div>
+      <button class="pin-back" onclick="backToSelect()">← 戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <div class="logo-emblem">R</div>
+        <div class="logo-text">RIG-<span>EL</span></div>
+      </div>
+      <div class="logo-sub">株式会社RIG-EL 営業システム</div>
+    </div>
+    <div class="user-badge" id="sidebar-user-badge">
+      <div class="user-badge-av" id="sb-av"></div>
+      <div class="user-badge-info">
+        <div class="user-badge-name" id="sb-name"></div>
+        <div class="user-badge-role" id="sb-role"></div>
+      </div>
+      <button class="btn-logout" onclick="logout()" title="ログアウト">⏻</button>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="switchPage('leads',this)"><span class="nav-icon">◈</span> リードリスト</div>
+      <div class="nav-item" onclick="switchPage('dashboard',this)"><span class="nav-icon">◎</span> ダッシュボード</div>
+      <div class="nav-item" onclick="switchPage('monthly',this)"><span class="nav-icon">▦</span> 月別シート</div>
+      <div class="nav-item" onclick="switchPage('docs',this)"><span class="nav-icon">📁</span> サービス資料</div>
+      <div class="nav-item" onclick="switchPage('proposal',this)"><span class="nav-icon">✦</span> 提案書作成</div>
+      <div class="nav-item settings-item" id="settings-nav" onclick="openSettings()"><span class="nav-icon">⚙</span> メンバー設定</div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="brand-footer"><strong>RIG-EL</strong><br><span style="font-size:10px;">Z世代マーケティングカンパニー</span></div>
+    </div>
+  </aside>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobile-nav">
+    <div class="mobile-nav-inner">
+      <div class="mnav-item active" id="mnav-leads" onclick="switchPage('leads',this,true)">
+        <span class="mnav-icon">◈</span><span>リスト</span>
+      </div>
+      <div class="mnav-item" id="mnav-dashboard" onclick="switchPage('dashboard',this,true)">
+        <span class="mnav-icon">◎</span><span>ダッシュ</span>
+      </div>
+      <div class="mnav-item" id="mnav-monthly" onclick="switchPage('monthly',this,true)">
+        <span class="mnav-icon">▦</span><span>月別</span>
+      </div>
+      <div class="mnav-item" id="mnav-docs" onclick="switchPage('docs',this,true)">
+        <span class="mnav-icon">📁</span><span>資料</span>
+      </div>
+      <div class="mnav-item" id="mnav-proposal" onclick="switchPage('proposal',this,true)">
+        <span class="mnav-icon">✦</span><span>提案書</span>
+      </div>
+      <div class="mnav-item" id="mnav-settings" onclick="openSettings()">
+        <span class="mnav-icon">⚙</span><span>設定</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ① LEADS -->
+    <div id="page-leads" class="page active">
+      <div class="page-header">
+        <div><div class="page-title">リードリスト<span>.</span></div><div class="page-subtitle">見込み客・取引先を管理する</div></div>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input class="search-input" id="search" type="text" placeholder="会社名・名前で検索..." oninput="renderLeads()">
+        </div>
+        <select class="filter-sel" id="filter-status" onchange="renderLeads()">
+          <option value="">すべてのステータス</option>
+          <option>定期交流</option><option>提案中</option><option>受注</option>
+          <option>見込み</option><option>パートナー候補</option><option>再アプローチ</option>
+        </select>
+        <select class="filter-sel" id="filter-member" onchange="renderLeads()">
+          <option value="">すべての担当</option>
+        </select>
+        <button class="btn-add" onclick="openLeadModal()" style="display:none;" id="desktop-add-btn">＋ リード追加</button>
+      </div>
+      <!-- Desktop table -->
+      <div class="table-wrap">
+        <table class="leads-table">
+          <thead><tr>
+            <th>会社名</th><th>役職</th><th>名前</th><th>URL</th>
+            <th>事業内容</th><th>社員数</th><th>メモ</th>
+            <th>担当者</th><th>受注情報</th><th>記入日</th>
+            <th>ステータス</th><th></th>
+          </tr></thead>
+          <tbody id="leads-tbody"></tbody>
+        </table>
+        <div id="empty-state" class="empty-state" style="display:none;">
+          <div style="font-size:32px;opacity:0.3;margin-bottom:10px;">◈</div>
+          <p style="font-size:13px;">リードがありません。追加しましょう。</p>
+        </div>
+      </div>
+      <!-- Mobile cards -->
+      <div class="lead-cards" id="lead-cards"></div>
+      <div id="mobile-empty" class="empty-state" style="display:none;">
+        <div style="font-size:32px;opacity:0.3;margin-bottom:10px;">◈</div>
+        <p style="font-size:13px;">リードがありません。＋から追加しましょう。</p>
+      </div>
+    </div>
+
+    <!-- ② DASHBOARD -->
+    <div id="page-dashboard" class="page">
+      <div class="page-header">
+        <div><div class="page-title">ダッシュボード<span>.</span></div><div class="page-subtitle" id="dash-subtitle">リアルタイム集計</div></div>
+        <div class="month-nav">
+          <button onclick="changeMonth(-1)">‹</button>
+          <div class="month-label" id="month-label">—</div>
+          <button onclick="changeMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="rev-total">
+        <div>
+          <div class="rev-total-label" id="rev-total-label">当月 総売上</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;" id="rev-badges"></div>
+        </div>
+        <div class="rev-total-value" id="rev-total-val">¥0</div>
+      </div>
+      <div class="rev-breakdown">
+        <div class="rev-card">
+          <div class="rev-card-icon" style="background:rgba(52,211,153,0.12);">✦</div>
+          <div><div class="rev-card-label">新規受注（当月）</div><div class="rev-card-value" id="rev-new">¥0</div><div class="rev-card-sub" id="rev-new-sub">0件</div></div>
+        </div>
+        <div class="rev-card">
+          <div class="rev-card-icon" style="background:rgba(56,189,248,0.12);">↻</div>
+          <div><div class="rev-card-label">継続運用（当月）</div><div class="rev-card-value" id="rev-recurring">¥0</div><div class="rev-card-sub" id="rev-recurring-sub">0件</div></div>
+        </div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card highlight">
+          <div class="metric-top"><span class="metric-label">当月 売上合計</span><div class="metric-icon" style="background:rgba(255,107,26,0.15);">💴</div></div>
+          <div class="metric-value" id="m-month-rev">¥0</div>
+          <div class="metric-delta" id="m-month-rev-sub">新規＋継続</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-top"><span class="metric-label">当月 リード数</span><div class="metric-icon" style="background:rgba(56,189,248,0.1);">◈</div></div>
+          <div class="metric-value" id="m-leads">0</div>
+          <div class="metric-delta" id="m-leads-sub">件登録</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-top"><span class="metric-label">当月 受注件数</span><div class="metric-icon" style="background:rgba(52,211,153,0.1);">✓</div></div>
+          <div class="metric-value" id="m-orders">0</div>
+          <div class="metric-delta" id="m-conv">転換率 —</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-top"><span class="metric-label">提案中（当月）</span><div class="metric-icon" style="background:rgba(255,171,64,0.1);">◎</div></div>
+          <div class="metric-value" id="m-proposals">0</div>
+          <div class="metric-delta">要フォローアップ</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card full">
+          <div class="chart-head">
+            <span class="chart-title">月別 売上推移（新規 / 継続）</span>
+            <div class="legend-row" style="margin:0;"><span class="legend-item"><span class="ldot" style="background:#34D399;"></span>新規</span><span class="legend-item"><span class="ldot" style="background:#38BDF8;"></span>継続</span></div>
+          </div>
+          <div style="position:relative;height:200px;"><canvas id="c-revenue" role="img" aria-label="月別売上推移">月別売上</canvas></div>
+        </div>
+        <div class="chart-card full">
+          <div class="chart-head">
+            <span class="chart-title">担当者別 受注額 — 年間累計</span>
+            <span class="chart-pill">円</span>
+          </div>
+          <div class="legend-row" id="member-legend"></div>
+          <div style="position:relative;height:180px;"><canvas id="c-member-year" role="img" aria-label="担当者別年間受注額">担当者別年間受注額</canvas></div>
+        </div>
+        <div class="chart-card full">
+          <div class="chart-head">
+            <span class="chart-title">担当者別 受注額 — <span id="member-month-label-title">当月</span></span>
+            <span class="chart-pill">円</span>
+          </div>
+          <div style="position:relative;height:180px;"><canvas id="c-member-month" role="img" aria-label="担当者別当月受注額">担当者別当月受注額</canvas></div>
+        </div>
+        <div class="chart-card full">
+          <div class="chart-head"><span class="chart-title">ステータス別 リード分布</span></div>
+          <div class="status-flex">
+            <div style="position:relative;height:160px;width:160px;flex-shrink:0;"><canvas id="c-status" role="img" aria-label="ステータス別分布">ステータス分布</canvas></div>
+            <div class="status-list" id="status-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ MONTHLY -->
+    <div id="page-monthly" class="page">
+      <div class="page-header">
+        <div><div class="page-title">月別シート<span>.</span></div><div class="page-subtitle" id="monthly-subtitle">月ごとの受注内訳</div></div>
+        <div class="month-nav">
+          <button onclick="changeMonthlyMonth(-1)">‹</button>
+          <div class="month-label" id="monthly-month-label">—</div>
+          <button onclick="changeMonthlyMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="rev-total" style="margin-bottom:12px;">
+        <div>
+          <div class="rev-total-label" id="monthly-total-label">当月 総売上</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;" id="monthly-badges"></div>
+        </div>
+        <div class="rev-total-value" id="monthly-total-val">¥0</div>
+      </div>
+      <div class="rev-breakdown" style="margin-bottom:18px;">
+        <div class="rev-card"><div class="rev-card-icon" style="background:rgba(52,211,153,0.12);">✦</div><div><div class="rev-card-label">新規受注</div><div class="rev-card-value" id="monthly-new-val">¥0</div><div class="rev-card-sub" id="monthly-new-sub">0件</div></div></div>
+        <div class="rev-card"><div class="rev-card-icon" style="background:rgba(56,189,248,0.12);">↻</div><div><div class="rev-card-label">継続運用</div><div class="rev-card-value" id="monthly-rec-val">¥0</div><div class="rev-card-sub" id="monthly-rec-sub">0件</div></div></div>
+      </div>
+      <div class="monthly-table-wrap">
+        <table class="monthly-table">
+          <thead><tr><th>会社名</th><th>担当者</th><th>種別</th><th>金額</th><th>受注日</th><th>運用期間</th><th>当月売上</th></tr></thead>
+          <tbody id="monthly-tbody"></tbody>
+          <tfoot><tr class="total-row"><td colspan="6" style="text-align:right;color:var(--text2);">当月合計</td><td id="monthly-total-foot" style="font-family:'Syne',sans-serif;color:var(--accent);">¥0</td></tr></tfoot>
+        </table>
+        <div id="monthly-empty" class="empty-state" style="display:none;"><p style="font-size:13px;">この月に受注案件はありません。</p></div>
+      </div>
+    </div>
+
+    <!-- ④ サービス資料 -->
+    <div id="page-docs" class="page">
+      <div class="page-header">
+        <div><div class="page-title">サービス資料<span>.</span></div><div class="page-subtitle">営業資料をまとめて管理・すぐに共有</div></div>
+        <button class="btn-add" id="docs-add-btn" onclick="openDocsModal()">＋ 資料を追加</button>
+      </div>
+      <div id="docs-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;"></div>
+      <div id="docs-empty" class="empty-state" style="display:none;">
+        <div style="font-size:32px;opacity:0.3;margin-bottom:10px;">📁</div>
+        <p style="font-size:13px;">資料がありません。「資料を追加」から登録しましょう。</p>
+      </div>
+    </div>
+
+    <!-- ⑤ 提案書作成 -->
+    <div id="page-proposal" class="page">
+      <div class="page-header">
+        <div><div class="page-title">提案書作成<span>.</span></div><div class="page-subtitle">AIが自動でたたき台を生成</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;" class="proposal-grid">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:20px;">
+            <div style="font-size:11px;color:var(--text3);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:14px;">提案先の情報</div>
+            <div class="form-grid" style="gap:10px;">
+              <div class="fg full"><label>会社名</label>
+                <select id="p-company-select" onchange="fillFromLead()" style="font-size:14px;padding:10px 12px;">
+                  <option value="">リストから選択（または直接入力）</option>
+                </select>
+              </div>
+              <div class="fg full"><label>会社名（直接入力）</label><input type="text" id="p-company" placeholder="株式会社〇〇"></div>
+              <div class="fg"><label>担当者名</label><input type="text" id="p-contact" placeholder="山田 様"></div>
+              <div class="fg"><label>事業内容</label><input type="text" id="p-biz" placeholder="アパレルEC"></div>
+              <div class="fg"><label>課題・背景</label><input type="text" id="p-issue" placeholder="Z世代採用に苦戦している"></div>
+              <div class="fg"><label>予算感</label><input type="text" id="p-budget" placeholder="月30〜50万円"></div>
+            </div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:20px;">
+            <div style="font-size:11px;color:var(--text3);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:14px;">提案内容</div>
+            <div class="form-grid" style="gap:10px;">
+              <div class="fg full"><label>提案するサービス</label>
+                <select id="p-service" style="font-size:14px;padding:10px 12px;">
+                  <option value="">選択してください</option>
+                  <option value="z-marketing">① Z世代マーケティング事業（20〜150万円/月）</option>
+                  <option value="chokuz">② 直Z採用・採用マーケティング（25〜50万円/月）</option>
+                  <option value="sns">③ SNS運用（25〜150万円/月）</option>
+                  <option value="ad">④ 広告運用（広告費+20% or 10〜20万円/月）</option>
+                  <option value="video">⑤ 動画制作（30〜200万円）</option>
+                  <option value="web">⑥ ホームページ制作（30〜300万円）</option>
+                  <option value="creative">⑦ その他クリエイティブ（バナー・ロゴ・名刺など）</option>
+                  <option value="z-project">⑧ 地方創生事業 Z-Project</option>
+                  <option value="event">⑨ イベント・コミュニティ運用事業</option>
+                  <option value="combo">複数サービスの組み合わせ</option>
+                </select>
+              </div>
+              <div class="fg full"><label>提案の強調ポイント</label><input type="text" id="p-strength" placeholder="実績・スピード・コスパ など"></div>
+              <div class="fg full"><label>特記事項・備考</label><textarea id="p-note" placeholder="紹介案件・競合あり など" style="min-height:56px;font-size:14px;"></textarea></div>
+            </div>
+          </div>
+          <button onclick="generateProposal()" style="background:linear-gradient(135deg,#FF6B1A,#FFAB40);color:#0c0b09;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;transition:all 0.18s;box-shadow:0 0 20px rgba(255,107,26,0.25);" id="gen-btn">✦ 提案書を生成する</button>
+        </div>
+
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:20px;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="font-size:11px;color:var(--text3);letter-spacing:0.6px;text-transform:uppercase;">生成された提案書</div>
+            <button onclick="copyProposal()" id="copy-btn" style="display:none;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:8px;padding:5px 12px;font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.14s;">コピー</button>
+          </div>
+          <div id="proposal-loading" style="display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text3);">
+            <div style="width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+            <span style="font-size:13px;">AIが生成中...</span>
+          </div>
+          <div id="proposal-placeholder" style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text3);">
+            <div style="font-size:28px;opacity:0.3;">✦</div>
+            <p style="font-size:13px;text-align:center;">左のフォームを入力して<br>「提案書を生成する」を押してください</p>
+          </div>
+          <textarea id="proposal-output" style="display:none;flex:1;background:var(--bg4);border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;line-height:1.8;resize:none;outline:none;min-height:420px;" placeholder=""></textarea>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab-btn" onclick="openLeadModal()" aria-label="リード追加">＋</button>
+
+<!-- DOCS MODAL -->
+<div class="overlay" id="docs-overlay" onclick="if(event.target.id==='docs-overlay')closeDocsModal()">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <div class="modal-title" id="docs-modal-title">資料を追加</div>
+      <button class="modal-close" onclick="closeDocsModal()">✕</button>
+    </div>
+    <div class="form-grid" style="gap:11px;">
+      <div class="fg full"><label>資料名 *</label><input type="text" id="d-title" placeholder="会社概要 2026年版"></div>
+      <div class="fg full"><label>カテゴリ</label>
+        <select id="d-category">
+          <option>会社紹介</option><option>サービス案内</option><option>実績・事例</option><option>料金表</option><option>その他</option>
+        </select>
+      </div>
+      <div class="fg full"><label>URL（Google Drive / Notion / 外部リンク）</label><input type="url" id="d-url" placeholder="https://drive.google.com/..."></div>
+      <div class="fg full"><label>説明・メモ</label><textarea id="d-memo" placeholder="最新版の会社紹介資料。初回商談に使用。" style="min-height:60px;font-size:14px;"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDocsModal()">キャンセル</button>
+      <button class="btn-save" onclick="saveDoc()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEAD MODAL -->
+<div class="overlay" id="lead-overlay" onclick="closeLeadModalBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="lead-modal-title">リードを追加</div>
+      <button class="modal-close" onclick="closeLeadModal()">✕</button>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">基本情報</div>
+      <div class="form-grid">
+        <div class="fg full"><label>会社名 *</label><input type="text" id="f-company" placeholder="株式会社〇〇" autocomplete="off"></div>
+        <div class="fg"><label>役職</label><input type="text" id="f-role" placeholder="営業部長"></div>
+        <div class="fg"><label>名前</label><input type="text" id="f-name" placeholder="山田 太郎"></div>
+        <div class="fg full"><label>会社 URL</label><input type="url" id="f-url" placeholder="https://..." inputmode="url"></div>
+        <div class="fg full"><label>事業内容</label><input type="text" id="f-biz" placeholder="SaaS開発・マーケティングなど"></div>
+        <div class="fg"><label>社員数</label><input type="text" id="f-size" placeholder="50名" inputmode="numeric"></div>
+        <div class="fg"><label>記入日 *</label><input type="date" id="f-date"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">営業情報</div>
+      <div class="form-grid">
+        <div class="fg"><label>ステータス</label>
+          <select id="f-status" onchange="onStatusChange()">
+            <option>定期交流</option><option>提案中</option><option>受注</option>
+            <option>見込み</option><option>パートナー候補</option><option>再アプローチ</option>
+          </select>
+        </div>
+        <div class="fg"><label>担当者</label>
+          <div class="member-select-area" id="member-select-area" onclick="toggleMemberDropdown()"></div>
+          <div id="member-dropdown" class="member-dropdown" style="display:none;"></div>
+        </div>
+        <div class="fg full"><label>メモ</label><textarea id="f-memo" placeholder="商談内容・次のアクション・感触など"></textarea></div>
+      </div>
+    </div>
+    <div class="form-section" id="order-section" style="display:none;">
+      <div class="form-section-title">受注オプション</div>
+      <div class="fg" style="margin-bottom:12px;"><label>受注日</label><input type="date" id="f-order-date"></div>
+      <label style="font-size:11px;color:var(--text2);font-weight:500;display:block;margin-bottom:6px;">受注タイプ</label>
+      <div class="order-type-toggle">
+        <button class="ott-btn active" id="ott-single" onclick="setOrderType('single')">✦ 単発受注</button>
+        <button class="ott-btn" id="ott-recurring" onclick="setOrderType('recurring')">↻ 運用型（月額）</button>
+      </div>
+      <div id="single-block"><div class="fg"><label>受注額（円）</label><input type="number" id="f-amount-single" placeholder="0" min="0" inputmode="numeric"></div></div>
+      <div id="recurring-block" style="display:none;">
+        <div class="recurring-box">
+          <div class="recurring-box-title">↻ 運用型設定</div>
+          <div class="form-grid" style="margin-bottom:12px;">
+            <div class="fg"><label>月額（円）</label><input type="number" id="f-monthly-fee" placeholder="0" min="0" inputmode="numeric" oninput="updateRecurringPreview()"></div>
+            <div class="fg"><label>受注開始月</label><input type="month" id="f-start-month" oninput="updateRecurringPreview()"></div>
+          </div>
+          <label style="font-size:11px;color:var(--text2);font-weight:500;display:block;margin-bottom:8px;">運用月数</label>
+          <div class="month-stepper">
+            <button onclick="stepMonths(-1)">−</button>
+            <span class="month-stepper-val" id="months-val">3</span>
+            <span class="month-stepper-label">ヶ月</span>
+            <button onclick="stepMonths(1)">＋</button>
+            <button onclick="stepMonths(3)" style="padding:0 10px;width:auto;font-size:12px;">+3</button>
+            <button onclick="stepMonths(6)" style="padding:0 10px;width:auto;font-size:12px;">+6</button>
+            <button onclick="stepMonths(12)" style="padding:0 10px;width:auto;font-size:12px;">+12</button>
+          </div>
+          <div class="recurring-preview" id="recurring-preview">月額・開始月・月数を入力すると試算が表示されます</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeLeadModal()">キャンセル</button>
+      <button class="btn-save" onclick="saveLead()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settings-overlay" onclick="if(event.target.id==='settings-overlay')closeSettings()">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">メンバー設定</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <p style="font-size:12.5px;color:var(--text2);margin-bottom:14px;">メンバーを追加するとID・PINが自動発行されます。</p>
+    <div class="settings-list" id="settings-list"></div>
+    <div class="add-row">
+      <input type="text" id="new-member-name" placeholder="名前を入力..." maxlength="10" onkeydown="if(event.key==='Enter')addMember()">
+      <button class="btn-addm" onclick="addMember()">＋ 追加</button>
+    </div>
+    <div class="modal-actions"><button class="btn-save" onclick="closeSettings()">完了</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="toast-dot"></span><span id="toast-msg"></span></div>
+
+<script>
+const LKEY='leadflow_leads_v4';
+const MKEY='leadflow_members_v2';
+const UKEY='leadflow_user_v1';
+const MC=['#FF6B1A','#38BDF8','#34D399','#A78BFA','#FF4D6D','#FFAB40','#F472B6','#4ADE80','#FB923C','#60A5FA'];
+
+// ── DATA ──
+let members=JSON.parse(localStorage.getItem(MKEY)||'null')||[
+  {id:'m1',name:'田村',userId:'U001',pin:'1111',isAdmin:true},
+  {id:'m2',name:'山口',userId:'U002',pin:'2222',isAdmin:false},
+  {id:'m3',name:'中川',userId:'U003',pin:'3333',isAdmin:false},
+  {id:'m4',name:'木村',userId:'U004',pin:'4444',isAdmin:false},
+];
+let leads=JSON.parse(localStorage.getItem(LKEY)||'null')||[
+  {id:1,company:'株式会社テックA',role:'代表取締役',name:'佐藤 健',url:'https://example.com',biz:'Webシステム開発',size:'30名',memo:'来月デモ予定',status:'提案中',memberIds:['m1'],amount:0,date:'2026-04-10',orderType:'single',orderDate:'',monthlyFee:0,startMonth:'',months:0},
+  {id:2,company:'合同会社マーケB',role:'営業部長',name:'田中 美咲',url:'https://example.com',biz:'デジタルマーケティング',size:'15名',memo:'紹介案件',status:'見込み',memberIds:['m2'],amount:0,date:'2026-04-18',orderType:'single',orderDate:'',monthlyFee:0,startMonth:'',months:0},
+  {id:3,company:'グローバルC株式会社',role:'CTO',name:'鈴木 大輔',url:'https://example.com',biz:'AI・機械学習',size:'120名',memo:'パートナー連携を検討中',status:'パートナー候補',memberIds:['m1','m3'],amount:0,date:'2026-05-02',orderType:'single',orderDate:'',monthlyFee:0,startMonth:'',months:0},
+  {id:4,company:'株式会社フードD',role:'マネージャー',name:'高橋 花子',url:'https://example.com',biz:'フードテック',size:'8名',memo:'受注済み・単発',status:'受注',memberIds:['m2'],amount:580000,date:'2026-05-08',orderType:'single',orderDate:'2026-05-08',monthlyFee:0,startMonth:'',months:0},
+  {id:5,company:'株式会社スタートE',role:'代表',name:'伊藤 雄一',url:'https://example.com',biz:'HR Tech',size:'5名',memo:'SNS運用3ヶ月契約',status:'受注',memberIds:['m3'],amount:0,date:'2026-05-15',orderType:'recurring',orderDate:'2026-05-15',monthlyFee:150000,startMonth:'2026-05',months:3},
+  {id:6,company:'株式会社ファッションF',role:'CMO',name:'松本 彩',url:'https://example.com',biz:'アパレルEC',size:'22名',memo:'Instagram運用6ヶ月',status:'受注',memberIds:['m1'],amount:0,date:'2026-05-20',orderType:'recurring',orderDate:'2026-05-20',monthlyFee:200000,startMonth:'2026-05',months:6},
+];
+
+let editId=null,nid=leads.length?Math.max(...leads.map(l=>l.id))+1:1;
+let nmid=members.length?Math.max(...members.map(m=>parseInt(m.id.replace('m',''))||0))+1:1;
+let selMids=[],dropOpen=false,currentOrderType='single',recurMonths=3;
+let charts={};
+let currentUser=null;
+
+function nowYM(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
+let dashMonth=nowYM(),monthlySheetMonth=nowYM();
+
+function save(){localStorage.setItem(LKEY,JSON.stringify(leads));}
+function saveMem(){localStorage.setItem(MKEY,JSON.stringify(members));}
+function mcolor(id){const i=members.findIndex(m=>m.id===id);return MC[i%MC.length]||'#888';}
+function minitial(id){const m=members.find(x=>x.id===id);return m?m.name.charAt(0):'?';}
+function mname(id){const m=members.find(x=>x.id===id);return m?m.name:'—';}
+function fmtYen(n){return'¥'+Math.round(n).toLocaleString();}
+function ymLabel(ym){const[y,m]=ym.split('-');return y+'年'+parseInt(m)+'月';}
+
+function toast(msg){
+  const el=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+// ── AUTO-LOGIN CHECK ──
+function checkAutoLogin(){
+  const saved=localStorage.getItem(UKEY);
+  if(saved){
+    const m=members.find(x=>x.id===saved);
+    if(m){doLogin(m);return;}
+  }
+  renderLoginUsers();
+}
+
+// ── LOGIN ──
+let pinBuffer='';
+let pinTarget=null;
+
+function renderLoginUsers(){
+  const grid=document.getElementById('user-grid');
+  grid.innerHTML=members.map((m,i)=>`
+    <div class="user-tile" onclick="selectUser('${m.id}')">
+      <div class="user-av" style="background:${MC[i%MC.length]};">${m.name.charAt(0)}</div>
+      <div class="user-tile-name">${m.name}</div>
+      <div class="user-tile-id">ID: ${m.userId}</div>
+    </div>`).join('');
+}
+
+function selectUser(mid){
+  pinTarget=members.find(m=>m.id===mid);
+  if(!pinTarget)return;
+  const i=members.indexOf(pinTarget);
+  pinBuffer='';
+  updatePinDots(false);
+  document.getElementById('pin-user-av').style.background=MC[i%MC.length];
+  document.getElementById('pin-user-av').textContent=pinTarget.name.charAt(0);
+  document.getElementById('pin-user-name').textContent=pinTarget.name;
+  document.getElementById('pin-user-id').textContent='ID: '+pinTarget.userId+(pinTarget.isAdmin?' (管理者)':'');
+  document.getElementById('login-card-title').textContent='PINを入力';
+  document.getElementById('step-select').style.display='none';
+  document.getElementById('step-pin').style.display='block';
+}
+
+function backToSelect(){
+  document.getElementById('step-pin').style.display='none';
+  document.getElementById('step-select').style.display='block';
+  document.getElementById('login-card-title').textContent='メンバーを選択';
+  pinBuffer='';pinTarget=null;
+}
+
+function pinKey(k){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=k;
+  updatePinDots(false);
+  if(pinBuffer.length===4)setTimeout(checkPin,120);
+}
+function pinDel(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots(false);}
+
+function updatePinDots(error){
+  const dots=document.querySelectorAll('.pin-dot');
+  dots.forEach((d,i)=>{
+    d.classList.remove('filled','error');
+    if(error)d.classList.add('error');
+    else if(i<pinBuffer.length)d.classList.add('filled');
+  });
+}
+
+function checkPin(){
+  if(pinTarget&&pinBuffer===pinTarget.pin){
+    doLogin(pinTarget);
+  }else{
+    updatePinDots(true);
+    pinBuffer='';
+    setTimeout(()=>updatePinDots(false),600);
+  }
+}
+
+function doLogin(member){
+  currentUser=member;
+  localStorage.setItem(UKEY,member.id);
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('visible');
+  setupUserUI();
+  renderLeads();
+  document.getElementById('desktop-add-btn').style.display='flex';
+  document.getElementById('fab-btn').style.display='flex';
+}
+
+function logout(){
+  localStorage.removeItem(UKEY);
+  currentUser=null;
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display='flex';
+  pinBuffer='';pinTarget=null;
+  document.getElementById('step-pin').style.display='none';
+  document.getElementById('step-select').style.display='block';
+  document.getElementById('login-card-title').textContent='メンバーを選択';
+  renderLoginUsers();
+}
+
+function setupUserUI(){
+  const i=members.indexOf(currentUser);
+  const av=document.getElementById('sb-av');
+  av.style.background=MC[i%MC.length];
+  av.textContent=currentUser.name.charAt(0);
+  document.getElementById('sb-name').textContent=currentUser.name;
+  document.getElementById('sb-role').innerHTML=currentUser.isAdmin?'<span class="admin-badge">管理者</span>':'ID: '+currentUser.userId;
+  // 管理者のみ設定メニュー表示
+  document.getElementById('settings-nav').style.display=currentUser.isAdmin?'flex':'none';
+  document.getElementById('mnav-settings').style.display=currentUser.isAdmin?'flex':'none';
+}
+
+// ── NAV ──
+function switchPage(p,el,isMobile){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.mnav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if(el)el.classList.add('active');
+  if(p==='dashboard')updateDashboard();
+  if(p==='monthly')renderMonthly();
+  if(p==='docs')renderDocs();
+  if(p==='proposal')renderProposalLeadSelect();
+}
+
+// ── MEMBER FILTER ──
+function updateMemberFilter(){
+  const sel=document.getElementById('filter-member');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">すべての担当</option>';
+  members.forEach(m=>{const o=document.createElement('option');o.value=m.id;o.textContent=m.name;if(m.id===cur)o.selected=true;sel.appendChild(o);});
+}
+
+// ── RENDER LEADS ──
+function renderLeads(){
+  updateMemberFilter();
+  const q=document.getElementById('search').value.toLowerCase();
+  const st=document.getElementById('filter-status').value;
+  const mid=document.getElementById('filter-member').value;
+  const f=leads.filter(l=>(!q||l.company.toLowerCase().includes(q)||l.name.toLowerCase().includes(q))&&(!st||l.status===st)&&(!mid||l.memberIds.includes(mid)));
+
+  // Desktop table
+  const tb=document.getElementById('leads-tbody');
+  const em=document.getElementById('empty-state');
+  if(!f.length){tb.innerHTML='';em.style.display='block';}
+  else{
+    em.style.display='none';
+    tb.innerHTML=f.map(l=>{
+      const mbHtml=l.memberIds.map(mid=>`<span class="member-badge"><span class="member-avatar" style="background:${mcolor(mid)};">${minitial(mid)}</span>${mname(mid)}</span>`).join(' ');
+      let orderHtml='<span style="color:var(--text3);font-size:10.5px;">—</span>';
+      if(l.status==='受注'){
+        if(l.orderType==='recurring'&&l.monthlyFee>0)orderHtml=`<span class="type-badge type-recurring">↻ 月額</span><br><span class="amount-cell" style="font-size:10.5px;">${fmtYen(l.monthlyFee)}×${l.months}ヶ月</span>`;
+        else if(l.amount>0)orderHtml=`<span class="type-badge type-single">✦ 単発</span><br><span class="amount-cell" style="font-size:10.5px;">${fmtYen(l.amount)}</span>`;
+      }
+      return`<tr><td class="co-cell" title="${l.company}">${l.company}</td><td title="${l.role}" style="color:var(--text2);">${l.role}</td><td title="${l.name}">${l.name}</td><td>${l.url?`<a href="${l.url}" target="_blank" class="url-lnk">↗</a>`:''}</td><td title="${l.biz}" style="color:var(--text2);font-size:11px;">${l.biz}</td><td style="color:var(--text2);">${l.size}</td><td style="color:var(--text2);font-size:11px;" title="${l.memo}">${l.memo}</td><td style="overflow:visible;white-space:normal;">${mbHtml}</td><td style="overflow:visible;white-space:normal;line-height:1.8;">${orderHtml}</td><td class="date-cell">${l.date?l.date.replace(/-/g,'/'):'—'}</td><td><span class="tag tag-${l.status}">${l.status}</span></td><td><div class="row-actions"><button class="row-btn" onclick="openLeadModal(${l.id})">✎</button><button class="row-btn del" onclick="deleteLead(${l.id})">✕</button></div></td></tr>`;
+    }).join('');
+  }
+
+  // Mobile cards
+  const cards=document.getElementById('lead-cards');
+  const mem=document.getElementById('mobile-empty');
+  if(!f.length){cards.innerHTML='';mem.style.display='block';}
+  else{
+    mem.style.display='none';
+    cards.innerHTML=f.map(l=>{
+      const mbHtml=l.memberIds.map(mid=>`<span class="member-badge"><span class="member-avatar" style="background:${mcolor(mid)};">${minitial(mid)}</span>${mname(mid)}</span>`).join(' ');
+      let orderStr='';
+      if(l.status==='受注'){
+        if(l.orderType==='recurring'&&l.monthlyFee>0)orderStr=`<span class="type-badge type-recurring">↻ ${fmtYen(l.monthlyFee)}×${l.months}ヶ月</span>`;
+        else if(l.amount>0)orderStr=`<span class="type-badge type-single">✦ ${fmtYen(l.amount)}</span>`;
+      }
+      return`<div class="lead-card">
+        <div class="lead-card-top">
+          <div><div class="lead-card-company">${l.company}</div><div class="lead-card-name">${l.role} ${l.name}</div></div>
+          <span class="tag tag-${l.status}">${l.status}</span>
+        </div>
+        <div class="lead-card-tags">
+          ${mbHtml}
+          ${orderStr}
+        </div>
+        ${l.biz?`<div class="lead-card-row"><span class="lead-card-row-label">事業</span><span>${l.biz}</span></div>`:''}
+        ${l.memo?`<div class="lead-card-row"><span class="lead-card-row-label">メモ</span><span style="color:var(--text);">${l.memo}</span></div>`:''}
+        ${l.date?`<div class="lead-card-row"><span class="lead-card-row-label">記入日</span><span>${l.date.replace(/-/g,'/')}</span></div>`:''}
+        <div class="lead-card-actions">
+          <button class="lead-card-btn" onclick="openLeadModal(${l.id})">✎ 編集</button>
+          <button class="lead-card-btn del-btn" onclick="deleteLead(${l.id})">削除</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ── LEAD MODAL ──
+function onStatusChange(){document.getElementById('order-section').style.display=document.getElementById('f-status').value==='受注'?'block':'none';}
+function setOrderType(t){
+  currentOrderType=t;
+  document.getElementById('ott-single').classList.toggle('active',t==='single');
+  document.getElementById('ott-recurring').classList.toggle('active',t==='recurring');
+  document.getElementById('single-block').style.display=t==='single'?'block':'none';
+  document.getElementById('recurring-block').style.display=t==='recurring'?'block':'none';
+}
+function stepMonths(d){recurMonths=Math.max(1,recurMonths+d);document.getElementById('months-val').textContent=recurMonths;updateRecurringPreview();}
+function updateRecurringPreview(){
+  const fee=parseFloat(document.getElementById('f-monthly-fee').value)||0;
+  const sm=document.getElementById('f-start-month').value;
+  if(fee>0&&sm&&recurMonths>0){
+    const[sy,smo]=sm.split('-').map(Number);
+    const endDate=new Date(sy,smo-1+recurMonths-1);
+    document.getElementById('recurring-preview').textContent=`月額 ${fmtYen(fee)} × ${recurMonths}ヶ月 = 合計 ${fmtYen(fee*recurMonths)}　終了: ${endDate.getFullYear()}年${endDate.getMonth()+1}月`;
+  }else{document.getElementById('recurring-preview').textContent='月額・開始月・月数を入力すると試算が表示されます';}
+}
+
+function openLeadModal(id){
+  editId=id||null;
+  document.getElementById('lead-modal-title').textContent=id?'リードを編集':'リードを追加';
+  const today=new Date().toISOString().split('T')[0];
+  const ym=today.substring(0,7);
+  if(id){
+    const l=leads.find(x=>x.id===id);
+    document.getElementById('f-company').value=l.company;
+    document.getElementById('f-role').value=l.role;
+    document.getElementById('f-name').value=l.name;
+    document.getElementById('f-url').value=l.url;
+    document.getElementById('f-biz').value=l.biz;
+    document.getElementById('f-size').value=l.size;
+    document.getElementById('f-memo').value=l.memo;
+    document.getElementById('f-status').value=l.status;
+    document.getElementById('f-date').value=l.date||today;
+    document.getElementById('f-order-date').value=l.orderDate||today;
+    document.getElementById('f-amount-single').value=l.amount||'';
+    document.getElementById('f-monthly-fee').value=l.monthlyFee||'';
+    document.getElementById('f-start-month').value=l.startMonth||ym;
+    recurMonths=l.months||3;
+    document.getElementById('months-val').textContent=recurMonths;
+    selMids=[...l.memberIds];
+    setOrderType(l.orderType||'single');
+    onStatusChange();
+  }else{
+    ['f-company','f-role','f-name','f-url','f-biz','f-size','f-memo','f-amount-single','f-monthly-fee'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('f-status').value='定期交流';
+    document.getElementById('f-date').value=today;
+    document.getElementById('f-order-date').value=today;
+    document.getElementById('f-start-month').value=ym;
+    recurMonths=3;document.getElementById('months-val').textContent=3;
+    // 自分を担当者にデフォルトセット
+    selMids=currentUser?[currentUser.id]:[];
+    setOrderType('single');onStatusChange();
+  }
+  updateRecurringPreview();renderMemberSelectArea();hideMemberDD();
+  document.getElementById('lead-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('f-company').focus(),80);
+}
+function closeLeadModal(){document.getElementById('lead-overlay').classList.remove('open');hideMemberDD();}
+function closeLeadModalBg(e){if(e.target.id==='lead-overlay')closeLeadModal();}
+
+function renderMemberSelectArea(){
+  const area=document.getElementById('member-select-area');
+  if(!selMids.length){area.innerHTML='<span style="font-size:12px;color:var(--text3);padding:2px 4px;">タップして選択...</span>';return;}
+  area.innerHTML=selMids.map(mid=>`<span class="member-chip"><span class="member-chip-av" style="background:${mcolor(mid)};">${minitial(mid)}</span>${mname(mid)}<span class="member-chip-rm" onclick="removeChip('${mid}',event)">✕</span></span>`).join('');
+}
+function removeChip(mid,e){e.stopPropagation();selMids=selMids.filter(x=>x!==mid);renderMemberSelectArea();}
+function toggleMemberDropdown(){dropOpen?hideMemberDD():showMemberDD();}
+function showMemberDD(){
+  const dd=document.getElementById('member-dropdown');
+  dd.innerHTML=members.map(m=>`<div class="mdrop-item ${selMids.includes(m.id)?'selected':''}" onclick="toggleMSel('${m.id}')"><span style="width:24px;height:24px;border-radius:50%;background:${mcolor(m.id)};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;">${m.name.charAt(0)}</span><span>${m.name}</span>${selMids.includes(m.id)?'<span style="margin-left:auto;color:var(--accent);">✓</span>':''}</div>`).join('');
+  dd.style.display='block';dropOpen=true;
+}
+function hideMemberDD(){document.getElementById('member-dropdown').style.display='none';dropOpen=false;}
+function toggleMSel(mid){selMids.includes(mid)?selMids=selMids.filter(x=>x!==mid):selMids.push(mid);renderMemberSelectArea();showMemberDD();}
+
+function saveLead(){
+  const company=document.getElementById('f-company').value.trim();
+  if(!company){document.getElementById('f-company').focus();return;}
+  const status=document.getElementById('f-status').value;
+  const isOrder=status==='受注';
+  const ot=isOrder?currentOrderType:'single';
+  const d={company,role:document.getElementById('f-role').value.trim(),name:document.getElementById('f-name').value.trim(),url:document.getElementById('f-url').value.trim(),biz:document.getElementById('f-biz').value.trim(),size:document.getElementById('f-size').value.trim(),memo:document.getElementById('f-memo').value.trim(),status,memberIds:[...selMids],date:document.getElementById('f-date').value,orderType:ot,orderDate:isOrder?document.getElementById('f-order-date').value:'',amount:ot==='single'&&isOrder?parseFloat(document.getElementById('f-amount-single').value)||0:0,monthlyFee:ot==='recurring'&&isOrder?parseFloat(document.getElementById('f-monthly-fee').value)||0:0,startMonth:ot==='recurring'&&isOrder?document.getElementById('f-start-month').value:'',months:ot==='recurring'&&isOrder?recurMonths:0};
+  if(editId){Object.assign(leads.find(l=>l.id===editId),d);toast('更新しました ✓');}
+  else{leads.push({id:nid++,...d});toast('追加しました ✓');}
+  save();closeLeadModal();renderLeads();
+}
+function deleteLead(id){
+  if(!confirm('このリードを削除しますか？'))return;
+  leads=leads.filter(l=>l.id!==id);save();renderLeads();toast('削除しました');
+}
+
+// ── MONTH UTILS ──
+function addMonth(ym,n){const[y,m]=ym.split('-').map(Number);const d=new Date(y,m-1+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function changeMonth(n){dashMonth=addMonth(dashMonth,n);updateDashboard();}
+function changeMonthlyMonth(n){monthlySheetMonth=addMonth(monthlySheetMonth,n);renderMonthly();}
+
+function calcMonthRevenue(ym){
+  let newRev=0,recRev=0,newCount=0,recCount=0;
+  leads.filter(l=>l.status==='受注').forEach(l=>{
+    if(l.orderType==='single'){if(l.orderDate&&l.orderDate.substring(0,7)===ym){newRev+=l.amount;newCount++;}}
+    else if(l.orderType==='recurring'){if(!l.startMonth||!l.months)return;const[sy,sm]=l.startMonth.split('-').map(Number);const[ty,tm]=ym.split('-').map(Number);const diff=(ty-sy)*12+(tm-sm);if(diff>=0&&diff<l.months){recRev+=l.monthlyFee;recCount++;}}
+  });
+  return{newRev,recRev,newCount,recCount,total:newRev+recRev};
+}
+
+// ── DASHBOARD ──
+function destroyAll(){Object.values(charts).forEach(c=>c.destroy());charts={};}
+function updateDashboard(){
+  const ym=dashMonth;
+  document.getElementById('month-label').textContent=ymLabel(ym);
+  document.getElementById('dash-subtitle').textContent=ymLabel(ym)+'の集計';
+  const{newRev,recRev,newCount,recCount,total}=calcMonthRevenue(ym);
+  document.getElementById('rev-total-label').textContent=ymLabel(ym)+' 総売上';
+  document.getElementById('rev-total-val').textContent=fmtYen(total);
+  document.getElementById('rev-badges').innerHTML=`<span class="metric-badge badge-new">新規 ${newCount}件</span><span class="metric-badge badge-recurring">継続 ${recCount}件</span>`;
+  document.getElementById('rev-new').textContent=fmtYen(newRev);
+  document.getElementById('rev-new-sub').textContent=newCount+'件';
+  document.getElementById('rev-recurring').textContent=fmtYen(recRev);
+  document.getElementById('rev-recurring-sub').textContent=recCount+'件';
+  document.getElementById('m-month-rev').textContent=fmtYen(total);
+  document.getElementById('m-month-rev-sub').textContent=`新規 ${fmtYen(newRev)} ＋ 継続 ${fmtYen(recRev)}`;
+  const monthLeads=leads.filter(l=>l.date&&l.date.substring(0,7)===ym);
+  document.getElementById('m-leads').textContent=monthLeads.length;
+  document.getElementById('m-leads-sub').textContent=`件登録（累計 ${leads.length}件）`;
+  const monthOrders=leads.filter(l=>{if(l.status!=='受注')return false;if(l.orderType==='single')return l.orderDate&&l.orderDate.substring(0,7)===ym;if(l.orderType==='recurring')return l.startMonth===ym;return false;});
+  document.getElementById('m-orders').textContent=monthOrders.length;
+  document.getElementById('m-conv').textContent=monthLeads.length>0?`転換率 ${Math.round(monthOrders.length/Math.max(monthLeads.length,1)*100)}%`:`累計 ${leads.filter(l=>l.status==='受注').length}件`;
+  const monthProposals=leads.filter(l=>l.status==='提案中'&&l.date&&l.date.substring(0,7)===ym);
+  document.getElementById('m-proposals').textContent=monthProposals.length;
+  destroyAll();
+  const gc='rgba(255,255,255,0.05)',tc='rgba(245,240,235,0.38)';
+  const bs={x:{grid:{color:gc},ticks:{color:tc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11}}}};
+  const mls=[],nrs=[],rrs=[];
+  for(let i=-5;i<=6;i++){const m=addMonth(ym,i);const[,mo]=m.split('-');mls.push(parseInt(mo)+'月');const r=calcMonthRevenue(m);nrs.push(r.newRev);rrs.push(r.recRev);}
+  charts['rev']=new Chart(document.getElementById('c-revenue'),{type:'bar',data:{labels:mls,datasets:[{label:'新規',data:nrs,backgroundColor:'rgba(52,211,153,0.7)',borderRadius:4,borderSkipped:false},{label:'継続',data:rrs,backgroundColor:'rgba(56,189,248,0.6)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{...bs,x:{...bs.x,stacked:true},y:{...bs.y,stacked:true}}}});
+  const memYearRevs=members.map(m=>leads.filter(l=>l.status==='受注'&&l.memberIds.includes(m.id)).reduce((s,l)=>s+(l.orderType==='recurring'?l.monthlyFee*l.months:l.amount),0));
+  charts['member-year']=new Chart(document.getElementById('c-member-year'),{type:'bar',data:{labels:members.map(m=>m.name),datasets:[{data:memYearRevs,backgroundColor:members.map((_,i)=>MC[i%MC.length]+'bb'),hoverBackgroundColor:members.map((_,i)=>MC[i%MC.length]),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:bs}});
+  document.getElementById('member-legend').innerHTML=members.map((m,i)=>`<span class="legend-item"><span class="ldot" style="background:${MC[i%MC.length]}"></span>${m.name}</span>`).join('');
+  const memMonthRevs=members.map(m=>{
+    const r=calcMonthRevenue(ym);
+    return leads.filter(l=>l.status==='受注'&&l.memberIds.includes(m.id)).reduce((s,l)=>{
+      if(l.orderType==='single'&&l.orderDate&&l.orderDate.substring(0,7)===ym)return s+l.amount;
+      if(l.orderType==='recurring'&&l.startMonth){const[sy,sm]=l.startMonth.split('-').map(Number);const[ty,tm]=ym.split('-').map(Number);const diff=(ty-sy)*12+(tm-sm);if(diff>=0&&diff<l.months)return s+l.monthlyFee;}
+      return s;
+    },0);
+  });
+  document.getElementById('member-month-label-title').textContent=ymLabel(ym);
+  charts['member-month']=new Chart(document.getElementById('c-member-month'),{type:'bar',data:{labels:members.map(m=>m.name),datasets:[{data:memMonthRevs,backgroundColor:members.map((_,i)=>MC[i%MC.length]+'99'),hoverBackgroundColor:members.map((_,i)=>MC[i%MC.length]),borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:bs}});
+  const stC={'定期交流':'#38BDF8','提案中':'#FF6B1A','受注':'#34D399','見込み':'#FFAB40','パートナー候補':'#A78BFA','再アプローチ':'#FF4D6D'};
+  const stL=Object.keys(stC),stCn=stL.map(s=>leads.filter(l=>l.status===s).length),tot=leads.length||1;
+  charts['st']=new Chart(document.getElementById('c-status'),{type:'doughnut',data:{labels:stL,datasets:[{data:stCn,backgroundColor:stL.map(s=>stC[s]),borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false}}}});
+  document.getElementById('status-list').innerHTML=stL.map((s,i)=>`<div class="status-row-item"><span class="ldot" style="background:${stC[s]};width:9px;height:9px;border-radius:2px;"></span><span style="min-width:100px;font-size:12px;">${s}</span><div class="sbar-wrap"><div class="sbar" style="width:${Math.round(stCn[i]/tot*100)}%;background:${stC[s]};"></div></div><span class="scount">${stCn[i]}</span></div>`).join('');
+}
+
+// ── MONTHLY SHEET ──
+function renderMonthly(){
+  const ym=monthlySheetMonth;
+  document.getElementById('monthly-month-label').textContent=ymLabel(ym);
+  document.getElementById('monthly-subtitle').textContent=ymLabel(ym)+'の受注内訳';
+  document.getElementById('monthly-total-label').textContent=ymLabel(ym)+' 総売上';
+  const{newRev,recRev,newCount,recCount,total}=calcMonthRevenue(ym);
+  document.getElementById('monthly-total-val').textContent=fmtYen(total);
+  document.getElementById('monthly-badges').innerHTML=`<span class="metric-badge badge-new">新規 ${newCount}件</span><span class="metric-badge badge-recurring">継続 ${recCount}件</span>`;
+  document.getElementById('monthly-new-val').textContent=fmtYen(newRev);document.getElementById('monthly-new-sub').textContent=newCount+'件';
+  document.getElementById('monthly-rec-val').textContent=fmtYen(recRev);document.getElementById('monthly-rec-sub').textContent=recCount+'件';
+  const rows=[];
+  leads.filter(l=>l.status==='受注').forEach(l=>{
+    if(l.orderType==='single'){if(l.orderDate&&l.orderDate.substring(0,7)===ym)rows.push({lead:l,type:'single',amount:l.amount});}
+    else if(l.orderType==='recurring'){if(!l.startMonth||!l.months)return;const[sy,sm]=l.startMonth.split('-').map(Number);const[ty,tm]=ym.split('-').map(Number);const diff=(ty-sy)*12+(tm-sm);if(diff>=0&&diff<l.months)rows.push({lead:l,type:'recurring',amount:l.monthlyFee,diff,totalMonths:l.months});}
+  });
+  const tb=document.getElementById('monthly-tbody'),em=document.getElementById('monthly-empty');
+  if(!rows.length){tb.innerHTML='';em.style.display='block';document.getElementById('monthly-total-foot').textContent='¥0';return;}
+  em.style.display='none';
+  tb.innerHTML=rows.map(r=>{
+    const l=r.lead;
+    const mbHtml=l.memberIds.map(mid=>`<span class="member-badge"><span class="member-avatar" style="background:${mcolor(mid)};">${minitial(mid)}</span>${mname(mid)}</span>`).join(' ');
+    let periodHtml='—';
+    if(r.type==='recurring'){const[sy,sm]=l.startMonth.split('-').map(Number);const endDate=new Date(sy,sm-1+l.months-1);periodHtml=`${parseInt(l.startMonth.split('-')[1])}月→${endDate.getFullYear()}年${endDate.getMonth()+1}月（${r.diff+1}/${r.totalMonths}ヶ月）`;}
+    return`<tr><td style="font-weight:500;">${l.company}</td><td style="overflow:visible;white-space:normal;">${mbHtml}</td><td><span class="type-badge ${r.type==='single'?'type-single':'type-recurring'}">${r.type==='single'?'✦ 単発':'↻ 継続'}</span></td><td class="amount-cell">${fmtYen(r.type==='single'?l.amount:l.monthlyFee)}</td><td class="date-cell">${(l.orderDate||'').replace(/-/g,'/')}</td><td style="font-size:11px;color:var(--text2);">${periodHtml}</td><td class="amount-cell">${fmtYen(r.amount)}</td></tr>`;
+  }).join('');
+  document.getElementById('monthly-total-foot').textContent=fmtYen(total);
+}
+
+// ── SETTINGS ──
+function generateUserId(){return'U'+String(members.length+1).padStart(3,'0');}
+function generatePin(){return String(Math.floor(1000+Math.random()*9000));}
+
+function openSettings(){
+  if(!currentUser?.isAdmin){toast('管理者のみ設定できます');return;}
+  renderSettings();document.getElementById('settings-overlay').classList.add('open');
+}
+function closeSettings(){document.getElementById('settings-overlay').classList.remove('open');}
+function renderSettings(){
+  document.getElementById('settings-list').innerHTML=members.map((m,i)=>`
+    <div class="settings-item">
+      <div class="settings-item-info">
+        <span style="width:30px;height:30px;border-radius:50%;background:${MC[i%MC.length]};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${m.name.charAt(0)}</span>
+        <div>
+          <div style="font-size:13.5px;font-weight:500;">${m.name}${m.isAdmin?'&nbsp;<span class="admin-badge">管理者</span>':''}</div>
+          <div class="settings-cred">ID: <span>${m.userId}</span> &nbsp;PIN: <span>${m.pin}</span></div>
+        </div>
+      </div>
+      ${!m.isAdmin?`<button class="btn-rm" onclick="removeMember('${m.id}')">削除</button>`:'<span></span>'}
+    </div>`).join('');
+}
+function addMember(){
+  const inp=document.getElementById('new-member-name');
+  const name=inp.value.trim();
+  if(!name)return;
+  if(members.find(m=>m.name===name)){toast('同じ名前が存在します');return;}
+  const newM={id:'m'+nmid++,name,userId:generateUserId(),pin:generatePin(),isAdmin:false};
+  members.push(newM);saveMem();inp.value='';renderSettings();updateMemberFilter();
+  toast(`${name} を追加 — ID: ${newM.userId} / PIN: ${newM.pin}`);
+}
+function removeMember(id){
+  if(!confirm('このメンバーを削除しますか？'))return;
+  members=members.filter(m=>m.id!==id);
+  leads=leads.map(l=>({...l,memberIds:l.memberIds.filter(x=>x!==id)}));
+  saveMem();save();renderSettings();renderLeads();toast('削除しました');
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeLeadModal();closeSettings();}});
+document.addEventListener('click',e=>{if(dropOpen&&!document.getElementById('lead-overlay').contains(e.target))hideMemberDD();});
+
+// ── DOCS ──
+const DKEY='leadflow_docs_v1';
+let docs=JSON.parse(localStorage.getItem(DKEY)||'null')||[
+  {id:'d1',title:'会社概要 2026年版',category:'会社紹介',url:'https://rig-el.co.jp/',memo:'最新の会社紹介資料。初回商談用。'},
+  {id:'d2',title:'サービス一覧 料金表',category:'料金表',url:'https://rig-el.co.jp/service',memo:'PX/DX/AX/HXの全サービスと参考単価。'},
+  {id:'d3',title:'支援実績まとめ',category:'実績・事例',url:'https://rig-el.co.jp/work',memo:'2021年〜最新の案件実績スライド。'},
+];
+let ndid=docs.length?Math.max(...docs.map(d=>parseInt(d.id.replace('d',''))||0))+1:1;
+function saveDocs(){localStorage.setItem(DKEY,JSON.stringify(docs));}
+
+const CAT_COLORS={'会社紹介':'#FF6B1A','サービス案内':'#38BDF8','実績・事例':'#34D399','料金表':'#A78BFA','その他':'#888780'};
+const CAT_ICONS={'会社紹介':'🏢','サービス案内':'📋','実績・事例':'🏆','料金表':'💰','その他':'📄'};
+
+function renderDocs(){
+  const grid=document.getElementById('docs-grid');
+  const em=document.getElementById('docs-empty');
+  if(!docs.length){grid.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  grid.innerHTML=docs.map(d=>{
+    const c=CAT_COLORS[d.category]||'#888';
+    const icon=CAT_ICONS[d.category]||'📄';
+    return`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:18px;display:flex;flex-direction:column;gap:10px;transition:border-color 0.18s;" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">${icon}</span>
+          <div>
+            <div style="font-size:13.5px;font-weight:500;line-height:1.3;">${d.title}</div>
+            <span style="display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;background:${c}20;color:${c};margin-top:4px;">${d.category}</span>
+          </div>
+        </div>
+        <button onclick="deleteDoc('${d.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:6px;flex-shrink:0;transition:color 0.14s;" onmouseover="this.style.color='#FF4D6D'" onmouseout="this.style.color='var(--text3)'">✕</button>
+      </div>
+      ${d.memo?`<div style="font-size:12px;color:var(--text2);line-height:1.5;">${d.memo}</div>`:''}
+      <a href="${d.url}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,#FF6B1A,#FFAB40);color:#0c0b09;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;text-decoration:none;transition:all 0.18s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        ↗ 資料を開く
+      </a>
+    </div>`;
+  }).join('');
+}
+
+let editDocId=null;
+function openDocsModal(id){
+  editDocId=id||null;
+  document.getElementById('docs-modal-title').textContent=id?'資料を編集':'資料を追加';
+  if(id){const d=docs.find(x=>x.id===id);document.getElementById('d-title').value=d.title;document.getElementById('d-category').value=d.category;document.getElementById('d-url').value=d.url;document.getElementById('d-memo').value=d.memo;}
+  else{['d-title','d-url','d-memo'].forEach(x=>document.getElementById(x).value='');document.getElementById('d-category').value='会社紹介';}
+  document.getElementById('docs-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('d-title').focus(),80);
+}
+function closeDocsModal(){document.getElementById('docs-overlay').classList.remove('open');}
+function saveDoc(){
+  const title=document.getElementById('d-title').value.trim();
+  if(!title){document.getElementById('d-title').focus();return;}
+  const d={title,category:document.getElementById('d-category').value,url:document.getElementById('d-url').value.trim(),memo:document.getElementById('d-memo').value.trim()};
+  if(editDocId){Object.assign(docs.find(x=>x.id===editDocId),d);toast('資料を更新しました ✓');}
+  else{docs.push({id:'d'+ndid++,...d});toast('資料を追加しました ✓');}
+  saveDocs();closeDocsModal();renderDocs();
+}
+function deleteDoc(id){
+  if(!confirm('この資料を削除しますか？'))return;
+  docs=docs.filter(d=>d.id!==id);saveDocs();renderDocs();toast('削除しました');
+}
+
+// ── PROPOSAL ──
+function renderProposalLeadSelect(){
+  const sel=document.getElementById('p-company-select');
+  sel.innerHTML='<option value="">リストから選択（または直接入力）</option>';
+  leads.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.company+(l.name?' — '+l.name:'');sel.appendChild(o);});
+}
+function fillFromLead(){
+  const id=parseInt(document.getElementById('p-company-select').value);
+  if(!id)return;
+  const l=leads.find(x=>x.id===id);
+  if(!l)return;
+  document.getElementById('p-company').value=l.company;
+  document.getElementById('p-contact').value=l.name||'';
+  document.getElementById('p-biz').value=l.biz||'';
+  document.getElementById('p-issue').value=l.memo||'';
+}
+
+async function generateProposal(){
+  const company=document.getElementById('p-company').value.trim()||document.getElementById('p-company-select').options[document.getElementById('p-company-select').selectedIndex]?.text||'';
+  const contact=document.getElementById('p-contact').value.trim();
+  const biz=document.getElementById('p-biz').value.trim();
+  const issue=document.getElementById('p-issue').value.trim();
+  const budget=document.getElementById('p-budget').value.trim();
+  const service=document.getElementById('p-service').value;
+  const strength=document.getElementById('p-strength').value.trim();
+  const note=document.getElementById('p-note').value.trim();
+  if(!company||!service){toast('会社名とサービスは必須です');return;}
+
+  document.getElementById('proposal-placeholder').style.display='none';
+  document.getElementById('proposal-output').style.display='none';
+  document.getElementById('proposal-loading').style.display='flex';
+  document.getElementById('copy-btn').style.display='none';
+  document.getElementById('gen-btn').disabled=true;
+
+  const SERVICE_DETAIL={
+    'z-marketing':`■ Z世代マーケティング事業
+価格：20〜150万円/月
+内容：今ある商品・サービスをZ世代向けにリブランディング・PR・販売・集客を実施。Z世代（若者）に広めたい時に特に有効。インフルエンサーマーケティングも実施。SNS・広告を使った認知拡大から分析・最適化施策まで一貫対応。`,
+    'chokuz':`■ 直Z採用（採用マーケティング）
+価格：25万円〜50万円/月
+内容：SNS広告（META広告）をメインに使い潜在層からの求人獲得施策。広告 → 採用公式LINE → 面談設定までを一括サポート。採用単価30万円前後（関東）・15〜20万円（地方）で実現可能。
+・25万円プラン：META広告運用のみ
+・50万円プラン：広告運用＋SNSコンテンツ制作まで実施`,
+    'sns':`■ SNS運用
+価格：25〜150万円/月
+内容：SNSの企画・撮影・編集・投稿代行・レポーティングまで一括サポート。
+・月4本：25万円
+・月6本：35万円
+・月10本：50万円
+・月20本：100万円
+本数・プラットフォームに応じてカスタマイズ可能。`,
+    'ad':`■ 広告運用
+価格：広告費の外付け（+20%）または運用費10〜20万円/月
+内容：META・Google・TikTok等の広告運用代行。`,
+    'video':`■ 動画制作
+価格：30〜200万円（単発）
+内容：動画制作会社スタートのため品質に自信あり。企業PR・採用・SNS用・イベント映像など幅広く対応。`,
+    'web':`■ ホームページ制作
+価格：30〜300万円（単発）
+内容：コーポレートサイト・採用サイト・サービスLPなど。`,
+    'creative':`■ その他クリエイティブ
+内容：バナー・イラスト・ロゴ・名刺などデザイン業務全般を対応。`,
+    'z-project':`■ 地方創生事業（Z-Project）
+URL：https://z-project.jp/challenge/
+内容：Z世代と地方をつなぐ地方創生プロジェクト。`,
+    'event':`■ イベント・コミュニティ運用事業
+関連URL：https://www.yumekana-bjv.com/ / https://beauty-japan-or.jp/
+内容：イベント運営・OA周り・設営・イベント企画など。スポンサー獲得も実施。`,
+    'combo':`■ 複数サービスの組み合わせ
+RIG-ELが提供するサービスを組み合わせた総合プロデュースプランを提案。`
+  };
+
+  const serviceDetail=SERVICE_DETAIL[service]||`■ ${service}`;
+
+  const prompt=`あなたは株式会社RIG-ELの優秀な営業担当です。以下の情報をすべて読み込み、実際に商談で使える精度の高い日本語の提案書テキストを作成してください。
+
+━━━━━━━━━━━━━━━━━━━━
+【株式会社RIG-EL 会社情報】
+━━━━━━━━━━━━━━━━━━━━
+会社名：株式会社RIG-EL（リグエル）
+所在地：東京都港区六本木 / 千代田区麹町（営業所）
+代表：上田 武徳
+ミッション：「Z世代の扉を開く」「人が集まる会社を創る」
+特徴：Z世代マーケティングカンパニー。SNS広告・動画制作・採用マーケ・インフルエンサーキャスティング・LINE運用・HP制作まで一気通貫で対応。月間60〜80社の採用・集客支援実績あり。
+
+【RIG-ELの実績（採用マーケ）】
+・兵庫県の営業会社：広告費5万円で面談5名・2名採用（面談単価1万円・採用単価2.5万円）
+・全国ライブ配信会社：広告費10万円でLINE追加750人・面談予約110名（申し込み単価910円）
+・採用マーケ：LINE獲得単価6,000〜7,000円（広告費100万円/月水準）
+・直Z採用プラン：採用単価30万円前後（関東）・15〜20万円（地方）で実現可能
+
+━━━━━━━━━━━━━━━━━━━━
+【RIG-ELの提案書の文体・スタイル（過去提案書から学習）】
+━━━━━━━━━━━━━━━━━━━━
+・冒頭に「与件の整理（ヒアリング内容）」を簡潔にまとめる
+・顕在課題と潜在課題を分けて整理する
+・「〜をジャックするほどの認知拡大を目指す」「人材が絶えない会社を作る」など熱量のあるコピーを使う
+・具体的なKPI数値（CPA・CPC・リーチ数・面談単価）を必ず入れる
+・STEP1〜STEP6のような進行フローを図式的に示す
+・月額費用・初期費用・広告実費を明確に分けて記載する
+・「まずはテストマーケから」という低リスク提案を組み込む
+・締めは「ぜひ一度ご一緒させてください」系の前向きな一文
+
+━━━━━━━━━━━━━━━━━━━━
+【提案するサービス詳細・料金】
+━━━━━━━━━━━━━━━━━━━━
+${serviceDetail}
+
+━━━━━━━━━━━━━━━━━━━━
+【提案先のヒアリング情報】
+━━━━━━━━━━━━━━━━━━━━
+会社名：${company}
+担当者：${contact||'ご担当者様'}
+事業内容：${biz||'不明'}
+課題・背景：${issue||'特になし'}
+予算感：${budget||'未定'}
+強調ポイント：${strength||'実績・スピード・費用対効果'}
+特記事項：${note||'なし'}
+
+━━━━━━━━━━━━━━━━━━━━
+【提案書の構成（必須）】
+━━━━━━━━━━━━━━━━━━━━
+以下の構成で作成してください。
+
+1. 冒頭のご挨拶（担当者名・社名に合わせた書き出し・2〜3文）
+2. 与件の整理 ＝ ヒアリング内容の箇条書き整理
+3. 顕在課題 vs 潜在課題（2列で整理）
+4. 課題解決の方針・コンセプト（キャッチーな一言＋説明）
+5. 具体的な施策フロー（STEP形式・認知→リスト獲得→育成→採用の流れ）
+6. KPI・数値シミュレーション（月間リーチ・CPC・CPA・面談数・採用数の想定値）
+7. RIG-ELが選ばれる理由（実績数値を交えて3点）
+8. 料金プラン（初期費用・月額運用費・広告実費を分けて明記）
+9. 直近スケジュール（準備期間〜運用開始の流れ）
+10. 締めの一言
+
+文体：熱量があり誠実。数値根拠を示しながら相手の課題に寄り添う。敬語。RIG-ELらしい前のめりなトーン。`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const text=data.content?.map(c=>c.text||'').join('\n')||'生成に失敗しました。もう一度お試しください。';
+    document.getElementById('proposal-output').value=text;
+    document.getElementById('proposal-output').style.display='block';
+    document.getElementById('copy-btn').style.display='block';
+  }catch(e){
+    document.getElementById('proposal-output').value='生成中にエラーが発生しました。\nネットワーク接続を確認してください。';
+    document.getElementById('proposal-output').style.display='block';
+  }
+  document.getElementById('proposal-loading').style.display='none';
+  document.getElementById('gen-btn').disabled=false;
+}
+
+function copyProposal(){
+  const txt=document.getElementById('proposal-output').value;
+  navigator.clipboard.writeText(txt).then(()=>toast('クリップボードにコピーしました ✓')).catch(()=>toast('コピーできませんでした'));
+}
+
+checkAutoLogin();
+</script>
+</body>
+</html>
